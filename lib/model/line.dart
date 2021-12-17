@@ -22,6 +22,13 @@ class Line {
       required this.modifier,
       this.allIp,
       this.allPorts});
+
+  @override
+  String toString() {
+    return "{"
+        "$verb , $ip, $mask, $port} ";
+
+  }
 }
 
 enum verbs { block, allow }

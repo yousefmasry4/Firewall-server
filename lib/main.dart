@@ -81,7 +81,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // See https://pub.dev/documentation/shelf/latest/shelf/Cascade-class.html
     final cascade = Cascade()
     // First, serve files from the 'public' directory
-        .add(_staticHandler)
     // If a corresponding file is not found, send requests to a `Router`
         .add(router);
 
@@ -99,10 +98,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
-  // Serve files from the file system.
-  final _staticHandler =
-  shelf_static.createStaticHandler('public', defaultDocument: 'index.html');
 
+
+  List<Line> l=[];
 
   bool FireWallCore(SenderModel data){
     if(lines.isEmpty){
@@ -112,13 +110,18 @@ class _MyHomePageState extends State<MyHomePage> {
       });
       return true;
     }
-    List<Line> l= List.from(lines);
+    l.clear();
+    for (Line item in lines){
+      l.add(Line(modifier: item.modifier,port: item.port,ip: item.ip, verb: item.verb,allIp: item.allIp,allPorts: item.allPorts
+
+      ));
+    }
+
     if(data.flag == Flag.Continue){
       l=l.where((element) => element.modifier == true).toList();
     }else{
       l=l.skipWhile((element) => element.modifier == true).toList();
     }
-    print(l.toString());
     if(l.isEmpty){
       data.ans=true;
       setState(() {
@@ -126,7 +129,12 @@ class _MyHomePageState extends State<MyHomePage> {
       });
       return true;
     }
+
+    print(l == lines);
+    print(lines.toString());
     l=l.map((e){
+      print(lines.toString());
+
       if(e.allPorts == true){
         e.mask =data.mask;
         e.port =data.sourcePort;
@@ -134,9 +142,25 @@ class _MyHomePageState extends State<MyHomePage> {
       if(e.allIp == true){
         e.ip =data.sourceIP;
       }
+      print(lines.toString());
+
       return e;
-    }).toList();
+    }
+    ).toList();
+
+    print(l.toString());
+    print(lines.toString());
+
+
     l=l.where((element) => element.ip == data.sourceIP && element.port == data.sourcePort).toList();
+    if(l.isEmpty){
+      data.ans=true;
+      setState(() {
+        senderModel.add(data);
+      });
+      return true;
+    }
+    print(l.length);
     bool ans= l.isEmpty?false:l.first.verb == verbs.allow?true:false;
     data.ans=ans;
     setState(() {
@@ -211,7 +235,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 child:ListView.builder(
                   itemCount: senderModel.length,
                   itemBuilder: (context, index) {
-                    senderModel=senderModel.reversed.toList();
                     return ListTile(
                       title: Container(
                         color: senderModel[index].ans?Colors.green:Colors.red,
@@ -341,7 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           modifier: modifier,
                                           ip: ip,
                                           allIp: ip == "*"?true:false,
-                                          port: int.parse(port!),
+                                          port: port=="*"?null:int.parse(port!),
                                           allPorts: port == "*"?true:false,
                                           verb: verb == "block"?verbs.block:verbs.allow,
                                           mask: int.parse(mask!),
